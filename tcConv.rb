@@ -36,8 +36,8 @@ tc = File.open(options[:input]).each_line.to_a.map{ |line|
   end
   if line =~ /Assume+/
     options[:format]="tc2"
-    puts 'tc1 to tc2 function broken. exit.'
-    exit
+    # puts 'tc1 to tc2 function broken. exit.'
+    # exit
     next
   end
   line = line.strip.split","
@@ -75,23 +75,42 @@ if options[:format] == "tc1"
   lastest_item=out[-1].split(",")
   out[-1].gsub!(/,.+,/, ",#{lastest_item[1]},"=>",#{index},")
 elsif options[:format] == "tc2"
-  tc.shift(2)
-  out.append("# timecode format v2", 0)
-  tc.each do |item|
-    lastest=out[-1]
-    #diff=Rational(1000,item[2])
-    diff=1000/item[2]
-    # p lastest, max_num
-    if item[0] == item[1]
-      out.append(lastest+diff)
+  def inter(num)
+    num_s = num.to_s.split"."
+    case num_s[1]
+    when /9999+/
+      num.ceil
+    when /0000+/
+      num.floor
     else
-      max_num=lastest+((item[1]-item[0]+1)*diff).to_f
-      # pp lastest, max_num, diff
-      lastest.step(max_num, diff).each.to_a[1..-1] do |i|
-        out.append(i.to_f)
-      end
+      num
     end
   end
+  tc.shift(2)
+  out.append("# timecode format v2")
+  tc.each do |item|
+    lastest=out[-1]
+    if lastest =~ /# timecode format+/
+      lastest = 0
+      out.append(0)
+    end
+    #diff=Rational(1000,item[2])
+    diff=1000/item[2].ceil(20)
+    # p lastest, max_num
+    if item[0] == item[1]
+      out.append(inter(lastest+diff))
+    else
+      ti = item[1]-item[0]+1  # 循环次数
+      tmp = []
+      ti.times do |i|
+        i += 1
+        num = inter(lastest+diff*i.ceil(20))
+        tmp.append(num)
+      end
+      tmp.each {|i| out.append(i)}
+    end
+  end
+  out.pop
 end
 #pp out[-5..-1]
 unless options[:output]

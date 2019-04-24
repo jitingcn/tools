@@ -3,7 +3,7 @@
 require 'optparse'
 
 OptionParser.new do |opts|
-  opts.banner = 'Timecodes converter.'
+  opts.banner = 'Matroska Timecodes Version Converter'
 
   # opts.on('-v', '--version', 'time code format version 1|2') do |value|
   #   $format = value
